@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assassin India: Ultra Final Edition</title>
+    <style>
+        :root { --red: #ff4444; --blue: #0088ff; --gold: #ffd700; --dark: #0a0a0a; --green: #00ff00; --pink: #ff69b4; }
+        body { background: var(--dark); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding-bottom: 50px; transition: 2s; overflow-x: hidden; }
+        
+        /* Realistic Environments */
+        .sunny { background: linear-gradient(#4facfe, #00f2fe); }
+        .foggy { background: linear-gradient(#606c88, #3f4c6b); }
+        .rainy { background: linear-gradient(#203a43, #2c5364); }
+
+        .app-container { max-width: 500px; margin: auto; background: rgba(0,0,0,0.95); min-height: 100vh; position: relative; border: 1px solid #333; }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; background: #000; }
+        
+        /* Box Styles */
+        .sys-box { background: #181818; margin: 10px; padding: 15px; border-radius: 12px; border: 1px solid #444; }
+        .profile-card { background: #1a1a1a; margin: 10px; border-radius: 15px; padding: 20px; text-align: center; border: 1px solid #333; }
+        input { width: 85%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #444; background: #000; color: white; }
+        
+        .fam-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .fam-member { background: #222; padding: 10px; border-radius: 8px; border-left: 3px solid var(--pink); font-size: 0.8em; }
+
+        button { width: 100%; padding: 12px; margin: 5px 0; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-gold { background: var(--gold); color: black; }
+        .btn-blue { background: var(--blue); color: white; }
+        .btn-red { background: var(--red); color: white; }
+        
+        #map-view { height: 150px; background: #004d40; border-radius: 10px; position: relative; overflow: hidden; border: 2px solid #222; }
+        #bus { position: absolute; bottom: 10px; left: 10px; font-size: 24px; transition: 4s linear; z-index: 10; }
+    </style>
+</head>
+<body class="sunny">
+
+<div id="auth-screen" class="overlay">
+    <div id="signup-box" style="width: 85%; background: #111; padding: 20px; border-radius: 15px; border: 2px solid var(--gold);">
+        <h2 style="color: var(--gold);">Assassin Signup 👤</h2>
+        <input type="text" id="reg-user" placeholder="अपना यूनिक यूजरनेम">
+        <input type="password" id="reg-pass" placeholder="अपना पासवर्ड चुनें">
+        <button class="btn-gold" onclick="registerUser()">लाइफटाइम अकाउंट बनाएं</button>
+        <p style="font-size: 0.8em;">Account है? <a href="#" onclick="toggleAuth(true)" style="color: var(--blue);">Login</a></p>
+    </div>
+    <div id="login-box" style="width: 85%; background: #111; padding: 20px; border-radius: 15px; border: 2px solid var(--blue); display: none;">
+        <h2 style="color: var(--blue);">Assassin Login 🔐</h2>
+        <input type="text" id="log-user" placeholder="यूजरनेम">
+        <input type="password" id="log-pass" placeholder="पासवर्ड">
+        <button class="btn-blue" onclick="loginUser()">प्रवेश करें</button>
+        <p style="font-size: 0.8em;">नया अकाउंट? <a href="#" onclick="toggleAuth(false)" style="color: var(--gold);">Sign Up</a></p>
+    </div>
+</div>
+
+<div id="shield-screen" class="overlay" style="display:none; background:#0a0a0a;">
+    <h2 style="color: var(--green);">🛡️ IRON SHIELD</h2>
+    <p>एन्क्रिप्शन सक्रिय है। 6-अंकों का पिन डालें।</p>
+    <input type="password" id="master-pin" placeholder="Master Pin" maxlength="6" style="text-align:center; letter-spacing:5px; font-size:22px;">
+    <button class="btn-blue" style="width:200px;" onclick="unlockApp()">Unlock Access</button>
+</div>
+
+<div id="main-content" style="display: none;">
+    <div class="app-container">
+        <div style="background: #151515; padding: 15px; display: flex; justify-content: space-between; border-bottom: 2px solid #333;">
+            <h2 style="color: var(--red); margin:0;">ASSASSIN REALM 🇮🇳</h2>
+            <div id="wallet-ui" style="color: var(--gold); font-weight: bold;">💰 50000</div>
+        </div>
+
+        <div class="sys-box" style="display: flex; justify-content: space-between; align-items: center; border-color: var(--blue);">
+            <span id="net-status">Mode: <span style="color: var(--green);">Online</span></span>
+            <select id="mode-select" onchange="toggleHybrid()" style="background:#333; color:white; padding:5px;">
+                <option value="online">Online Mode</option>
+                <option value="offline">Offline Mode</option>
+            </select>
+        </div>
+
+        <div class="profile-card">
+            <div style="position: relative; display: inline-block;">
+                <img id="dp-img" src="https://via.placeholder.com/100" onclick="document.getElementById('dp-up').click()">
+                <span id="blue-tick" style="display:none; color: var(--blue); position: absolute; bottom: 0; right: 0; font-size: 20px;">✔</span>
+            </div>
+            <input type="file" id="dp-up" hidden onchange="loadPhoto(this)">
+            <h3 id="p-name">Karan</h3>
+            <div class="hp-bar"><div id="hp-fill"></div></div>
+            <p style="font-size: 0.8em;">HP: <span id="hp-val">300</span> / 300</p>
+            <div style="display: flex; justify-content: space-around; margin-top: 10px;">
+                <div><b id="lvl-ui">1</b><br><small>Level</small></div>
+                <div><b id="fol-ui">9950</b><br><small>Followers</small></div>
+            </div>
+            <button class="btn-gold" style="margin-top: 10px;" onclick="upgradeHP()">Upgrade HP to 500 (5000 Coins)</button>
+        </div>
+
+        <div class="sys-box" style="border-color: var(--pink);">
+            <h4 style="color: var(--pink); margin:0;">My Family 👨‍👩‍👧‍👦</h4>
+            <div id="family-list" class="fam-grid"></div>
+            <div style="margin-top: 10px; display: flex; gap: 5px;">
+                <input type="text" id="fam-name" placeholder="नाम" style="flex:2; margin:0; padding:8px;">
+                <select id="fam-role" style="flex:1; background:#000; color:white; border-radius:8px;">
+                    <option value="Maa">Maa</option>
+                    <option value="Papa">Papa</option>
+                    <option value="Bhai">Bhai</option>
+                    <option value="Behen">Behen</option>
+                </select>
+            </div>
+            <button class="btn-blue" style="background: var(--pink); margin-top:10px;" onclick="addFamily()">Add to My Family</button>
+        </div>
+
+        <div class="sys-box">
+            <h4>India Explorer 🗺️</h4>
+            <div id="map-view">
+                <div id="loc-tag" style="padding:5px; font-size:0.7em; background:rgba(0,0,0,0.6);">Loc: Home City</div>
+                <div id="bus">🚌</div>
+            </div>
+            <select id="dest" style="width:100%; padding:10px; margin-top:10px; background:#222; color:white;">
+                <option value="Home">Home City (Base)</option>
+                <option value="Puri">Odisha: Jagannath Puri (Foggy)</option>
+                <option value="Mumbai">Mumbai: Gateway (Rainy)</option>
+            </select>
+            <button class="btn-gold" onclick="travel()">Travel by Bus (200 Coins)</button>
+        </div>
+
+        <div class="sys-box" id="social-hub">
+            <h4>Law & Order 👮</h4>
+            <button class="btn-red" onclick="commitCrime()">👊 Commit Street Crime</button>
+            <button class="btn-gold" style="background:#fff; color:#000;" onclick="syncCloud()">☁️ Google Cloud Sync</button>
+            <button class="btn-blue" onclick="location.reload()">Logout / Exit</button>
+        </div>
+
+        <div class="sys-box">
+            <h4>Media & Build 🏗️</h4>
+            <div id="player" style="margin-bottom:10px;"></div>
+            <div style="height:25px; background:#222; border-bottom:2px solid #8b4513;">
+                <div id="house" style="height:100%; width:0%; background:#fff; transition: 2s;"></div>
+            </div>
+            <button onclick="build()" class="btn-gold" style="background:#8b4513; color:white; margin-top:10px;">Start Construction (500)</button>
+        </div>
+    </div>
+</div>
+
+<div id="jail" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.98); z-index:10000; text-align:center; padding-top:100px;">
+    <h1 style="color:red;">🚨 JAIL 🚨</h1>
+    <div style="font-size: 80px;">⛓️</div>
+    <h2 id="timer">Saja: 10s</h2>
+    <p>Police have arrested you for multiple crimes.</p>
+</div>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+<script>
+    let wallet = 50000, followers = 9950, crimes = 0, family = [];
+
+    // --- AUTH & SHIELD LOGIC ---
+    function toggleAuth(login) {
+        document.getElementById('signup-box').style.display = login ? 'none' : 'block';
+        document.getElementById('login-box').style.display = login ? 'block' : 'none';
+    }
+
+    function registerUser() {
+        let u = document.getElementById('reg-user').value.trim();
+        let p = document.getElementById('reg-pass').value;
+        if(u.length < 3) return alert("नाम लिखें!");
+        if(localStorage.getItem('db_u_' + u)) return alert("User already exists!");
+        localStorage.setItem('db_u_' + u, p);
+        showShield(u);
+    }
+
+    function loginUser() {
+        let u = document.getElementById('log-user').value.trim();
+        let p = document.getElementById('log-pass').value;
+        if(localStorage.getItem('db_u_' + u) === p) showShield(u);
+        else alert("गलत पासवर्ड!");
+    }
+
+    function showShield(u) {
+        localStorage.setItem('current_u', u);
+        document.getElementById('auth-screen').style.display = 'none';
+        document.getElementById('shield-screen').style.display = 'flex';
+    }
+
+    function unlockApp() {
+        let pin = document.getElementById('master-pin').value;
+        if(pin.length === 6) {
+            document.getElementById('shield-screen').style.display = 'none';
+            document.getElementById('main-content').style.display = 'block';
+            document.getElementById('p-name').innerText = localStorage.getItem('current_u');
+            loadFamily();
+            updateUI();
+        } else alert("6-अंकों का पिन डालें!");
+    }
+
+    // --- FAMILY LOGIC ---
+    function addFamily() {
+        let name = document.getElementById('fam-name').value;
+        let role = document.getElementById('fam-role').value;
+        if(!name) return alert("नाम लिखें!");
+        family.push({ name, role });
+        localStorage.setItem('fam_db_' + localStorage.getItem('current_u'), JSON.stringify(family));
+        document.getElementById('fam-name').value = "";
+        renderFamily();
+    }
+
+    function renderFamily() {
+        document.getElementById('family-list').innerHTML = family.map(m => 
+            `<div class="fam-member"><b>${m.role}:</b> ${m.name}<br><span style="color:var(--gold)">❤️ Bond: High</span></div>`
+        ).join('');
+    }
+
+    function loadFamily() {
+        let saved = localStorage.getItem('fam_db_' + localStorage.getItem('current_u'));
+        if(saved) { family = JSON.parse(saved); renderFamily(); }
+    }
+
+    // --- GAME LOGIC ---
+    function updateUI() {
+        document.getElementById('wallet-ui').innerText = "💰 " + wallet;
+        document.getElementById('fol-ui').innerText = followers;
+        if(followers >= 10000) document.getElementById('blue-tick').style.display = "inline";
+    }
+
+    function travel() {
+        if(wallet < 200) return; wallet -= 200;
+        let d = document.getElementById('dest').value;
+        document.getElementById('bus').style.left = "80%";
+        setTimeout(() => {
+            document.getElementById('loc-tag').innerText = "Location: " + d;
+            document.getElementById('bus').style.left = "10px";
+            document.body.className = d==='Puri'?'foggy':(d==='Mumbai'?'rainy':'sunny');
+            updateUI();
+        }, 4000);
+    }
+
+    function commitCrime() {
+        crimes++;
+        if(crimes >= 3) {
+            document.getElementById('jail').style.display = 'block';
+            let s = 10;
+            let t = setInterval(() => {
+                s--; document.getElementById('timer').innerText = "Saja: " + s + "s";
+                if(s <= 0) { clearInterval(t); document.getElementById('jail').style.display='none'; crimes=0; }
+            }, 1000);
+        } else alert("पुलिस अलर्ट हो गई है! 🚔");
+    }
+
+    function build() {
+        if(wallet < 500) return; wallet -= 500;
+        document.getElementById('house').style.width = "100%";
+        setTimeout(() => { alert("Mansion Construction Complete!"); updateUI(); }, 2000);
+    }
+
+    function toggleHybrid() {
+        let online = document.getElementById('mode-select').value === 'online';
+        document.getElementById('net-status').innerHTML = online ? "Mode: <span style='color:var(--green)'>Online</span>" : "Mode: <span style='color:red'>Offline</span>";
+    }
+
+    function syncCloud() {
+        localStorage.setItem('cloud_save', JSON.stringify({w:wallet, f:followers, fam:family}));
+        alert("डेटा सिंक हो गया! ✅");
+    }
+
+    function loadPhoto(i) {
+        if (i.files && i.files[0]) {
+            let r = new FileReader();
+            r.onload = e => document.getElementById('dp-img').src = e.target.result;
+            r.readAsDataURL(i.files[0]);
+        }
+    }
+
+    function onYouTubeIframeAPIReady() {
+        new YT.Player('player', { height: '140', width: '100%', videoId: 'dQw4w9WgXcQ' });
+    }
+
+    window.onload = () => {
+        let u = localStorage.getItem('current_u');
+        if(u) showShield(u);
+    };
+    setInterval(() => { followers += Math.floor(Math.random()*4); updateUI(); }, 10000);
+</script>
+</body>
+</html>
